@@ -1,13 +1,38 @@
 services:
+  db:
+    image: postgres:16
+    container_name: healthtracker-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: personalapp-backend
+    container_name: healthtracker-backend
+    env_file:
+      - .env
     environment:
-      DB_URL: ${DB_URL:-jdbc:postgresql://host.docker.internal:5432/personalapp}
-      DB_USERNAME: ${DB_USERNAME:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
-      PORT: 8080
+      BACKEND_PRIVATE_PORT: ${BACKEND_PRIVATE_PORT}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${BACKEND_PUBLIC_PORT}:${BACKEND_PRIVATE_PORT}"
+
+volumes:
+  postgres_data:
