@@ -1,0 +1,13 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: personalapp-backend
+    environment:
+      DB_URL: ${DB_URL:-jdbc:postgresql://host.docker.internal:5432/personalapp}
+      DB_USERNAME: ${DB_USERNAME:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      PORT: 8080
+    ports:
+      - "8080:8080"
