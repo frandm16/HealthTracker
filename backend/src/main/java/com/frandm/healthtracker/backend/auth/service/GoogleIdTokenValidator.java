@@ -15,7 +15,7 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 
 @Component
-public class GoogleIdTokenValidator implements GoogleTokenValidator {
+public class GoogleIdTokenValidator {
 
     private static final String GOOGLE_ISSUER = "https://accounts.google.com";
 
@@ -41,7 +41,6 @@ public class GoogleIdTokenValidator implements GoogleTokenValidator {
         this.jwtDecoder = decoder;
     }
 
-    @Override
     public GoogleUserInfo validate(String idToken) {
         try {
             Jwt jwt = jwtDecoder.decode(idToken);

@@ -13,7 +13,6 @@ import com.frandm.healthtracker.backend.auth.repository.AuthSessionRepository;
 import com.frandm.healthtracker.backend.auth.repository.UserRepository;
 import java.time.Clock;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AuthService {
 
-    private final GoogleTokenValidator googleTokenValidator;
+    private final GoogleIdTokenValidator googleIdTokenValidator;
     private final UserRepository userRepository;
     private final AuthIdentityRepository authIdentityRepository;
     private final AuthSessionRepository authSessionRepository;
@@ -30,7 +29,7 @@ public class AuthService {
     private final Clock clock;
 
     public AuthService(
-            GoogleTokenValidator googleTokenValidator,
+            GoogleIdTokenValidator googleIdTokenValidator,
             UserRepository userRepository,
             AuthIdentityRepository authIdentityRepository,
             AuthSessionRepository authSessionRepository,
@@ -38,7 +37,7 @@ public class AuthService {
             RefreshTokenService refreshTokenService,
             Clock clock
     ) {
-        this.googleTokenValidator = googleTokenValidator;
+        this.googleIdTokenValidator = googleIdTokenValidator;
         this.userRepository = userRepository;
         this.authIdentityRepository = authIdentityRepository;
         this.authSessionRepository = authSessionRepository;
@@ -49,36 +48,27 @@ public class AuthService {
 
     @Transactional
     public AuthResponse signInWithGoogle(String idToken) {
-        GoogleUserInfo googleUser = googleTokenValidator.validate(idToken);
+        GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken);
         UserEntity user = authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.GOOGLE, googleUser.subject())
                 .map(AuthIdentityEntity::getUser)
                 .orElseGet(() -> createUserWithIdentity(googleUser));
-        return createAuthResponse(user);
+        return createAuthResponse(user, OffsetDateTime.now(clock));
     }
 
     @Transactional
     public AuthResponse refresh(String refreshToken) {
-        String refreshTokenHash = refreshTokenService.hash(refreshToken);
-        AuthSessionEntity session = authSessionRepository.findByRefreshTokenHash(refreshTokenHash)
-                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token is invalid."));
         OffsetDateTime now = OffsetDateTime.now(clock);
-        if (session.isRevoked() || session.isExpired(now)) {
-            throw new InvalidRefreshTokenException("Refresh token is no longer active.");
-        }
-        session.setRevokedAt(now);
-        authSessionRepository.save(session);
-        return createAuthResponse(session.getUser());
+        AuthSessionEntity session = getActiveSession(refreshToken, now);
+        revokeSession(session, now);
+        return createAuthResponse(session.getUser(), now);
     }
 
     @Transactional
     public void logout(String refreshToken) {
-        String refreshTokenHash = refreshTokenService.hash(refreshToken);
-        authSessionRepository.findByRefreshTokenHash(refreshTokenHash).ifPresent(session -> {
-            if (!session.isRevoked()) {
-                session.setRevokedAt(OffsetDateTime.now(clock));
-                authSessionRepository.save(session);
-            }
-        });
+        OffsetDateTime now = OffsetDateTime.now(clock);
+        authSessionRepository.findByRefreshTokenHash(refreshTokenService.hash(refreshToken))
+                .filter(session -> !session.isRevoked())
+                .ifPresent(session -> revokeSession(session, now));
     }
 
     @Transactional(readOnly = true)
@@ -104,8 +94,21 @@ public class AuthService {
         return savedUser;
     }
 
-    private AuthResponse createAuthResponse(UserEntity user) {
-        OffsetDateTime now = OffsetDateTime.now(clock);
+    private AuthSessionEntity getActiveSession(String refreshToken, OffsetDateTime now) {
+        AuthSessionEntity session = authSessionRepository.findByRefreshTokenHash(refreshTokenService.hash(refreshToken))
+                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token is invalid."));
+        if (session.isRevoked() || session.isExpired(now)) {
+            throw new InvalidRefreshTokenException("Refresh token is no longer active.");
+        }
+        return session;
+    }
+
+    private void revokeSession(AuthSessionEntity session, OffsetDateTime now) {
+        session.setRevokedAt(now);
+        authSessionRepository.save(session);
+    }
+
+    private AuthResponse createAuthResponse(UserEntity user, OffsetDateTime now) {
         String accessToken = jwtTokenService.generateAccessToken(user.getId());
         RefreshTokenService.RefreshToken refreshToken = refreshTokenService.generate();
 
