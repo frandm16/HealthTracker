@@ -17,14 +17,14 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         return http
-                .cors(Customizer.withDefaults())
+                .cors(Customizer.withDefaults()) // CORS rules from CorsConfig
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/api/auth/google/sign-in", "/api/auth/refresh", "/api/auth/logout", "/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/api/auth/google/sign-in", "/api/auth/refresh", "/api/auth/logout", "/actuator/health", "/actuator/info").permitAll() // endpoints
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(Customizer.withDefaults())

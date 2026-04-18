@@ -48,19 +48,23 @@ public class AuthService {
 
     @Transactional
     public AuthResponse signInWithGoogle(String idToken) {
-        GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken);
+        GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken); // Verifies the Google token
+
         UserEntity user = authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.GOOGLE, googleUser.subject())
                 .map(AuthIdentityEntity::getUser)
-                .orElseGet(() -> createUserWithIdentity(googleUser));
+                .orElseGet(() -> createUserWithIdentity(googleUser)); // if User doesn't exist, it creates a new User
+
         return createAuthResponse(user, OffsetDateTime.now(clock));
     }
 
     @Transactional
     public AuthResponse refresh(String refreshToken) {
         OffsetDateTime now = OffsetDateTime.now(clock);
+
         AuthSessionEntity session = getActiveSession(refreshToken, now);
-        revokeSession(session, now);
-        return createAuthResponse(session.getUser(), now);
+        revokeSession(session, now); // Revokes old session
+
+        return createAuthResponse(session.getUser(), now); // Creates new session
     }
 
     @Transactional
@@ -68,7 +72,7 @@ public class AuthService {
         OffsetDateTime now = OffsetDateTime.now(clock);
         authSessionRepository.findByRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .filter(session -> !session.isRevoked())
-                .ifPresent(session -> revokeSession(session, now));
+                .ifPresent(session -> revokeSession(session, now)); // revokes Session if active
     }
 
     @Transactional(readOnly = true)
@@ -83,23 +87,26 @@ public class AuthService {
         user.setId(UUID.randomUUID());
         user.setEmail(googleUser.email());
         user.setName(googleUser.name());
-        UserEntity savedUser = userRepository.save(user);
+        UserEntity savedUser = userRepository.save(user); // Saves the User
 
         AuthIdentityEntity identity = new AuthIdentityEntity();
         identity.setId(UUID.randomUUID());
         identity.setUser(savedUser);
         identity.setProvider(AuthProvider.GOOGLE);
         identity.setProviderUserId(googleUser.subject());
-        authIdentityRepository.save(identity);
+        authIdentityRepository.save(identity); // links Google to the User
+
         return savedUser;
     }
 
     private AuthSessionEntity getActiveSession(String refreshToken, OffsetDateTime now) {
         AuthSessionEntity session = authSessionRepository.findByRefreshTokenHash(refreshTokenService.hash(refreshToken))
                 .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token is invalid."));
-        if (session.isRevoked() || session.isExpired(now)) {
+
+        if (session.isRevoked() || session.isExpired(now)) { // expired Session
             throw new InvalidRefreshTokenException("Refresh token is no longer active.");
         }
+
         return session;
     }
 

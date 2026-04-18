@@ -5,7 +5,7 @@ import com.frandm.healthtracker.backend.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SecurityException;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -29,7 +29,7 @@ public class JwtTokenService {
 
     public String generateAccessToken(UUID userId) {
         Instant now = clock.instant();
-        Instant expiration = now.plusSeconds(authProperties.getJwt().getAccessTokenTtlSeconds());
+        Instant expiration = now.plusSeconds(authProperties.getJwt().getAccessTokenSeconds());
         return Jwts.builder()
                 .subject(userId.toString())
                 .issuedAt(Date.from(now))
@@ -48,6 +48,6 @@ public class JwtTokenService {
     }
 
     public long getAccessTokenTtlSeconds() {
-        return authProperties.getJwt().getAccessTokenTtlSeconds();
+        return authProperties.getJwt().getAccessTokenSeconds();
     }
 }

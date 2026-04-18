@@ -28,13 +28,13 @@ server:
   port: ${BACKEND_PRIVATE_PORT:8080}
 
 app:
-  cors:
-    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:8081,http://127.0.0.1:8081}
-  auth:
+  cors: # CorsProperties
+    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS}
+  auth: # AuthProperties
     jwt:
       secret: ${APP_AUTH_JWT_SECRET}
-      access-token-ttl-seconds: ${APP_AUTH_ACCESS_TOKEN_TTL_SECONDS:900}
+      access-token-seconds: ${APP_AUTH_ACCESS_TOKEN_TTL_SECONDS}
     refresh-token:
-      ttl-seconds: ${APP_AUTH_REFRESH_TOKEN_TTL_SECONDS:2592000}
+      refresh-token-seconds: ${APP_AUTH_REFRESH_TOKEN_TTL_SECONDS}
     google:
-      audience: ${GOOGLE_CLIENT_ID}
+      google-client-id: ${GOOGLE_CLIENT_ID}

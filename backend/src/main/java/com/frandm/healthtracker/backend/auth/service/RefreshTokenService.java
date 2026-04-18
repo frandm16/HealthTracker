@@ -20,7 +20,7 @@ public class RefreshTokenService {
 
     public RefreshToken generate() {
         byte[] bytes = new byte[32];
-        secureRandom.nextBytes(bytes);
+        secureRandom.nextBytes(bytes); // Uses a cryptographically secure random generator
         return new RefreshToken(Base64.getUrlEncoder().withoutPadding().encodeToString(bytes));
     }
 
@@ -35,9 +35,9 @@ public class RefreshTokenService {
     }
 
     public long getTtlSeconds() {
-        return authProperties.getRefreshToken().getTtlSeconds();
+        return authProperties.getRefreshToken().getRefreshTokenSeconds();
     }
 
-    public record RefreshToken(String value) {
+    public record RefreshToken(String value) { // Plain refresh token returned once to the client
     }
 }

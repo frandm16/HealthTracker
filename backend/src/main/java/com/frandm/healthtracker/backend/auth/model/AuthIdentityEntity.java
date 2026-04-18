@@ -29,12 +29,11 @@ public class AuthIdentityEntity {
 
     @PrePersist
     void prePersist() {
-        OffsetDateTime now = OffsetDateTime.now();
         if (id == null) {
             id = UUID.randomUUID();
         }
-        createdAt = now;
-        updatedAt = now;
+        createdAt = OffsetDateTime.now();
+        updatedAt = OffsetDateTime.now();
     }
 
     @PreUpdate

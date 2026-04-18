@@ -13,16 +13,10 @@ public class AuthProperties {
     private final RefreshToken refreshToken = new RefreshToken();
     private final Google google = new Google();
 
+    //region Jwt
+
     public Jwt getJwt() {
         return jwt;
-    }
-
-    public RefreshToken getRefreshToken() {
-        return refreshToken;
-    }
-
-    public Google getGoogle() {
-        return google;
     }
 
     public static class Jwt {
@@ -30,7 +24,7 @@ public class AuthProperties {
         private String secret;
 
         @Min(1)
-        private long accessTokenTtlSeconds = 900;
+        private long accessTokenSeconds = 900; // 15min
 
         public String getSecret() {
             return secret;
@@ -40,38 +34,53 @@ public class AuthProperties {
             this.secret = secret;
         }
 
-        public long getAccessTokenTtlSeconds() {
-            return accessTokenTtlSeconds;
+        public long getAccessTokenSeconds() {
+            return accessTokenSeconds;
         }
 
-        public void setAccessTokenTtlSeconds(long accessTokenTtlSeconds) {
-            this.accessTokenTtlSeconds = accessTokenTtlSeconds;
+        public void setAccessTokenSeconds(long accessTokenSeconds) {
+            this.accessTokenSeconds = accessTokenSeconds;
         }
+    }
+
+    //endregion
+    //region Refresh Token
+
+    public RefreshToken getRefreshToken() {
+        return refreshToken;
     }
 
     public static class RefreshToken {
         @Min(1)
-        private long ttlSeconds = 2592000;
+        private long refreshTokenSeconds = 2592000; // 72h
 
-        public long getTtlSeconds() {
-            return ttlSeconds;
+        public long getRefreshTokenSeconds() {
+            return refreshTokenSeconds;
         }
 
-        public void setTtlSeconds(long ttlSeconds) {
-            this.ttlSeconds = ttlSeconds;
+        public void setRefreshTokenSeconds(long refreshTokenSeconds) {
+            this.refreshTokenSeconds = refreshTokenSeconds;
         }
+    }
+
+    //endregion
+    //region Google
+
+    public Google getGoogle() {
+        return google;
     }
 
     public static class Google {
         @NotBlank
-        private String audience;
+        private String googleClientId;
 
-        public String getAudience() {
-            return audience;
+        public String getGoogleClientId() {
+            return googleClientId;
         }
 
-        public void setAudience(String audience) {
-            this.audience = audience;
+        public void setGoogleClientId(String googleClientId) {
+            this.googleClientId = googleClientId;
         }
     }
+    //endregion
 }

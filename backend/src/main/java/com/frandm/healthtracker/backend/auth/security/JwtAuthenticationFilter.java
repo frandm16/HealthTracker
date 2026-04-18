@@ -27,9 +27,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
+
             String token = authHeader.substring(7);
-            UUID userId = jwtTokenService.parseUserId(token);
-            SecurityContextHolder.getContext().setAuthentication(new AuthenticatedUser(userId));
+            UUID userId = jwtTokenService.parseUserId(token); // userID from the token
+
+            SecurityContextHolder.getContext().setAuthentication(new AuthenticatedUser(userId)); // Stores the user in authenticated Users
         }
         filterChain.doFilter(request, response);
     }

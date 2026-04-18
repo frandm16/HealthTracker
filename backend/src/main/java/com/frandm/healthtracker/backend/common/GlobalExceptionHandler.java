@@ -18,20 +18,24 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiErrorResponse> handleValidation(MethodArgumentNotValidException ex) {
+
         List<String> errors = ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .collect(Collectors.toList());
+
         return ResponseEntity.badRequest().body(new ApiErrorResponse("Validation failed.", errors, OffsetDateTime.now()));
     }
 
     @ExceptionHandler({InvalidTokenException.class, InvalidRefreshTokenException.class, BadCredentialsException.class})
     public ResponseEntity<ApiErrorResponse> handleUnauthorized(RuntimeException ex) {
+
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiErrorResponse(ex.getMessage(), List.of(), OffsetDateTime.now()));
     }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotFound(UserNotFoundException ex) {
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ApiErrorResponse(ex.getMessage(), List.of(), OffsetDateTime.now()));
     }
