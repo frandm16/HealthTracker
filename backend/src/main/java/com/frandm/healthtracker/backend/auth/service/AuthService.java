@@ -3,8 +3,6 @@ package com.frandm.healthtracker.backend.auth.service;
 import com.frandm.healthtracker.backend.auth.AuthProvider;
 import com.frandm.healthtracker.backend.auth.dto.AuthResponse;
 import com.frandm.healthtracker.backend.auth.dto.UserResponse;
-import com.frandm.healthtracker.backend.auth.exception.InvalidRefreshTokenException;
-import com.frandm.healthtracker.backend.auth.exception.UserNotFoundException;
 import com.frandm.healthtracker.backend.auth.model.AuthIdentityEntity;
 import com.frandm.healthtracker.backend.auth.model.AuthSessionEntity;
 import com.frandm.healthtracker.backend.auth.model.UserEntity;
@@ -16,6 +14,10 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
 public class AuthService {
@@ -78,7 +80,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser(UUID userId) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Authenticated user was not found."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Authenticated user was not found."));
         return toUserResponse(user);
     }
 
@@ -101,10 +103,10 @@ public class AuthService {
 
     private AuthSessionEntity getActiveSession(String refreshToken, OffsetDateTime now) {
         AuthSessionEntity session = authSessionRepository.findByRefreshTokenHash(refreshTokenService.hash(refreshToken))
-                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token is invalid."));
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Refresh token is invalid."));
 
         if (session.isRevoked() || session.isExpired(now)) { // expired Session
-            throw new InvalidRefreshTokenException("Refresh token is no longer active.");
+            throw new ResponseStatusException(UNAUTHORIZED, "Refresh token is no longer active.");
         }
 
         return session;

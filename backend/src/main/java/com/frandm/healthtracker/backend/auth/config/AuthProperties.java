@@ -52,7 +52,7 @@ public class AuthProperties {
 
     public static class RefreshToken {
         @Min(1)
-        private long refreshTokenSeconds = 2592000; // 72h
+        private long refreshTokenSeconds = 2592000; // 30d
 
         public long getRefreshTokenSeconds() {
             return refreshTokenSeconds;

@@ -3,6 +3,7 @@ import { createContext, useEffect, useState, type PropsWithChildren } from 'reac
 import { fetchMe, logout, refreshSession, signInWithGoogle } from '@/features/auth/api/auth-api';
 import { clearStoredSession, loadStoredSession, saveStoredSession } from '@/features/auth/storage/auth-storage';
 import { isAccessTokenExpired, type StoredAuthSession } from '@/features/auth/types';
+import { ApiError } from '@/lib/api-client';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -70,23 +71,41 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return nextSession;
   }
 
+  async function renewSession(currentSession: StoredAuthSession): Promise<StoredAuthSession> {
+    const nextSession = await refreshSession(currentSession.refreshToken);
+    await saveStoredSession(nextSession);
+    setSession(nextSession);
+    setStatus('authenticated');
+    return nextSession;
+  }
+
   async function refreshCurrentUser(): Promise<void> {
     if (!session) {
       throw new Error('No hay ninguna sesion iniciada.');
     }
 
-    let nextSession = session;
+    try {
+      const nextSession = isAccessTokenExpired(session) ? await renewSession(session) : session;
+      const user = await fetchMe(nextSession.accessToken);
+      const updatedSession = { ...nextSession, user };
 
-    if (isAccessTokenExpired(session)) {
-      nextSession = await refreshSession(session.refreshToken);
+      await saveStoredSession(updatedSession);
+      setSession(updatedSession);
+      setStatus('authenticated');
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401 && !isAccessTokenExpired(session)) {
+        const nextSession = await renewSession(session);
+        const user = await fetchMe(nextSession.accessToken);
+        const updatedSession = { ...nextSession, user };
+
+        await saveStoredSession(updatedSession);
+        setSession(updatedSession);
+        setStatus('authenticated');
+        return;
+      }
+
+      throw error;
     }
-
-    const user = await fetchMe(nextSession.accessToken);
-    const updatedSession = { ...nextSession, user };
-
-    await saveStoredSession(updatedSession);
-    setSession(updatedSession);
-    setStatus('authenticated');
   }
 
   async function signOut(): Promise<void> {

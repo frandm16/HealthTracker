@@ -1,7 +1,6 @@
 package com.frandm.healthtracker.backend.auth.service;
 
 import com.frandm.healthtracker.backend.auth.config.AuthProperties;
-import com.frandm.healthtracker.backend.auth.exception.InvalidTokenException;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import org.springframework.security.oauth2.core.OAuth2Error;
@@ -12,6 +11,9 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Component
 public class GoogleIdTokenValidator {
@@ -53,12 +55,12 @@ public class GoogleIdTokenValidator {
             String name = jwt.getClaimAsString("name");
 
             if (subject == null || email == null || name == null || name.isBlank()) {
-                throw new InvalidTokenException("Google idToken payload is incomplete.");
+                throw new ResponseStatusException(UNAUTHORIZED, "Google idToken payload is incomplete.");
             }
 
             return new GoogleUserInfo(subject, email, name);
         } catch (JwtException ex) {
-            throw new InvalidTokenException("Google idToken verification failed.");
+            throw new ResponseStatusException(UNAUTHORIZED, "Google idToken verification failed.");
         }
     }
 }

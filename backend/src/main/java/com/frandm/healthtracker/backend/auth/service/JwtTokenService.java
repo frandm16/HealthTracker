@@ -1,7 +1,6 @@
 package com.frandm.healthtracker.backend.auth.service;
 
 import com.frandm.healthtracker.backend.auth.config.AuthProperties;
-import com.frandm.healthtracker.backend.auth.exception.InvalidTokenException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,6 +12,9 @@ import java.util.Date;
 import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
 public class JwtTokenService {
@@ -43,7 +45,7 @@ public class JwtTokenService {
             Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
             return UUID.fromString(claims.getSubject());
         } catch (RuntimeException ex) {
-            throw new InvalidTokenException("Access token is invalid.");
+            throw new ResponseStatusException(UNAUTHORIZED, "Access token is invalid.");
         }
     }
 
