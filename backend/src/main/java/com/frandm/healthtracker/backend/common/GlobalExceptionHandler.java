@@ -27,4 +27,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(ex.getStatusCode())
                 .body(new ApiErrorResponse(ex.getReason(), List.of(), OffsetDateTime.now()));
     }
+
+    private record ApiErrorResponse(
+            String message,
+            List<String> errors,
+            OffsetDateTime timestamp
+    ) {
+    }
 }

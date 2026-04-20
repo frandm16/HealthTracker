@@ -1,8 +1,7 @@
 package com.frandm.healthtracker.backend.auth.service;
 
-import com.frandm.healthtracker.backend.auth.AuthProvider;
-import com.frandm.healthtracker.backend.auth.dto.AuthResponse;
-import com.frandm.healthtracker.backend.auth.dto.UserResponse;
+import com.frandm.healthtracker.backend.auth.dto.AuthDtos.AuthResponse;
+import com.frandm.healthtracker.backend.auth.dto.AuthDtos.UserResponse;
 import com.frandm.healthtracker.backend.auth.model.AuthIdentityEntity;
 import com.frandm.healthtracker.backend.auth.model.AuthSessionEntity;
 import com.frandm.healthtracker.backend.auth.model.UserEntity;
@@ -21,6 +20,8 @@ import static org.springframework.http.HttpStatus.UNAUTHORIZED;
 
 @Service
 public class AuthService {
+
+    private static final String GOOGLE_PROVIDER = "google";
 
     private final GoogleIdTokenValidator googleIdTokenValidator;
     private final UserRepository userRepository;
@@ -50,9 +51,9 @@ public class AuthService {
 
     @Transactional
     public AuthResponse signInWithGoogle(String idToken) {
-        GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken); // Verifies the Google token
+        GoogleIdTokenValidator.GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken); // Verifies the Google token
 
-        UserEntity user = authIdentityRepository.findByProviderAndProviderUserId(AuthProvider.GOOGLE, googleUser.subject())
+        UserEntity user = authIdentityRepository.findByProviderAndProviderUserId(GOOGLE_PROVIDER, googleUser.subject())
                 .map(AuthIdentityEntity::getUser)
                 .orElseGet(() -> createUserWithIdentity(googleUser)); // if User doesn't exist, it creates a new User
 
@@ -84,7 +85,7 @@ public class AuthService {
         return toUserResponse(user);
     }
 
-    private UserEntity createUserWithIdentity(GoogleUserInfo googleUser) {
+    private UserEntity createUserWithIdentity(GoogleIdTokenValidator.GoogleUserInfo googleUser) {
         UserEntity user = new UserEntity();
         user.setId(UUID.randomUUID());
         user.setEmail(googleUser.email());
@@ -94,7 +95,7 @@ public class AuthService {
         AuthIdentityEntity identity = new AuthIdentityEntity();
         identity.setId(UUID.randomUUID());
         identity.setUser(savedUser);
-        identity.setProvider(AuthProvider.GOOGLE);
+        identity.setProvider(GOOGLE_PROVIDER);
         identity.setProviderUserId(googleUser.subject());
         authIdentityRepository.save(identity); // links Google to the User
 

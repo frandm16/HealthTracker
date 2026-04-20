@@ -1,6 +1,5 @@
 import { Stack } from 'expo-router';
 import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 import * as React from 'react';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
@@ -8,8 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getGoogleClientId, getMissingAuthConfig } from '@/lib/config';
 import { AuthContext } from '@/providers/auth-provider';
-
-WebBrowser.maybeCompleteAuthSession();
 
 const discovery = {
   authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',

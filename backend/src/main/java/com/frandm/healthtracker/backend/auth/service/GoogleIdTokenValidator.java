@@ -63,4 +63,11 @@ public class GoogleIdTokenValidator {
             throw new ResponseStatusException(UNAUTHORIZED, "Google idToken verification failed.");
         }
     }
+
+    public record GoogleUserInfo(
+            String subject,
+            String email,
+            String name
+    ) {
+    }
 }

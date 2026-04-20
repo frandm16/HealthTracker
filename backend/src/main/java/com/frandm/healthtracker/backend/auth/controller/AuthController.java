@@ -1,10 +1,9 @@
 package com.frandm.healthtracker.backend.auth.controller;
 
-import com.frandm.healthtracker.backend.auth.dto.AuthResponse;
-import com.frandm.healthtracker.backend.auth.dto.GoogleSignInRequest;
-import com.frandm.healthtracker.backend.auth.dto.LogoutRequest;
-import com.frandm.healthtracker.backend.auth.dto.RefreshTokenRequest;
-import com.frandm.healthtracker.backend.auth.dto.UserResponse;
+import com.frandm.healthtracker.backend.auth.dto.AuthDtos.AuthResponse;
+import com.frandm.healthtracker.backend.auth.dto.AuthDtos.GoogleSignInRequest;
+import com.frandm.healthtracker.backend.auth.dto.AuthDtos.RefreshTokenRequest;
+import com.frandm.healthtracker.backend.auth.dto.AuthDtos.UserResponse;
 import com.frandm.healthtracker.backend.auth.service.AuthService;
 import jakarta.validation.Valid;
 import java.util.UUID;
@@ -40,7 +39,7 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void logout(@Valid @RequestBody LogoutRequest request) {
+    public void logout(@Valid @RequestBody RefreshTokenRequest request) {
         authService.logout(request.refreshToken());
     }
 

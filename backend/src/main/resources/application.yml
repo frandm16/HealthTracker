@@ -28,8 +28,6 @@ server:
   port: ${BACKEND_PRIVATE_PORT:8080}
 
 app:
-  cors: # CorsProperties
-    allowed-origin-patterns: ${APP_CORS_ALLOWED_ORIGIN_PATTERNS}
   auth: # AuthProperties
     jwt:
       secret: ${APP_AUTH_JWT_SECRET}
