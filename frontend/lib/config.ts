@@ -1,5 +1,7 @@
 const apiBaseUrl = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-const googleClientId = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID?.trim();
+const googleWebClientId =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID?.trim() ??
+  process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID?.trim();
 
 export function getApiBaseUrl(): string {
   if (!apiBaseUrl) {
@@ -9,12 +11,12 @@ export function getApiBaseUrl(): string {
   return apiBaseUrl.replace(/\/+$/, '');
 }
 
-export function getGoogleClientId(): string {
-  if (!googleClientId) {
-    throw new Error('EXPO_PUBLIC_GOOGLE_CLIENT_ID is missing.');
+export function getGoogleWebClientId(): string {
+  if (!googleWebClientId) {
+    throw new Error('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID is missing.');
   }
 
-  return googleClientId;
+  return googleWebClientId;
 }
 
 export function getMissingAuthConfig(): string[] {
@@ -24,8 +26,8 @@ export function getMissingAuthConfig(): string[] {
     missing.push('EXPO_PUBLIC_API_BASE_URL');
   }
 
-  if (!googleClientId) {
-    missing.push('EXPO_PUBLIC_GOOGLE_CLIENT_ID');
+  if (!googleWebClientId) {
+    missing.push('EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID');
   }
 
   return missing;

@@ -8,6 +8,10 @@ type AuthResponse = {
   user: AuthUser;
 };
 
+export type GoogleIdTokenSignInPayload = {
+  idToken: string;
+};
+
 function toStoredSession(response: AuthResponse): StoredAuthSession {
   return {
     accessToken: response.accessToken,
@@ -17,10 +21,10 @@ function toStoredSession(response: AuthResponse): StoredAuthSession {
   };
 }
 
-export async function signInWithGoogle(idToken: string): Promise<StoredAuthSession> {
+export async function signInWithGoogle(payload: GoogleIdTokenSignInPayload): Promise<StoredAuthSession> {
   const response = await apiRequest<AuthResponse>('/api/auth/google/sign-in', {
     method: 'POST',
-    body: JSON.stringify({ idToken }),
+    body: JSON.stringify(payload),
   });
 
   return toStoredSession(response);

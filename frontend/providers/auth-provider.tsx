@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState, type PropsWithChildren } from 'react';
 
-import { fetchMe, logout, refreshSession, signInWithGoogle } from '@/features/auth/api/auth-api';
+import { fetchMe, logout, refreshSession, signInWithGoogle, type GoogleIdTokenSignInPayload } from '@/features/auth/api/auth-api';
+import { signOutFromGoogleNative } from '@/features/auth/native/google-sign-in';
 import { clearStoredSession, loadStoredSession, saveStoredSession } from '@/features/auth/storage/auth-storage';
 import { isAccessTokenExpired, type StoredAuthSession } from '@/features/auth/types';
 import { ApiError } from '@/lib/api-client';
@@ -10,7 +11,7 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 type AuthContextValue = {
   status: AuthStatus;
   session: StoredAuthSession | null;
-  signInWithGoogleIdToken: (idToken: string) => Promise<StoredAuthSession>;
+  signInWithGoogleIdToken: (payload: GoogleIdTokenSignInPayload) => Promise<StoredAuthSession>;
   refreshCurrentUser: () => Promise<void>;
   signOut: () => Promise<void>;
 };
@@ -63,8 +64,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  async function signInWithGoogleIdToken(idToken: string): Promise<StoredAuthSession> {
-    const nextSession = await signInWithGoogle(idToken);
+  async function signInWithGoogleIdToken(payload: GoogleIdTokenSignInPayload): Promise<StoredAuthSession> {
+    const nextSession = await signInWithGoogle(payload);
     await saveStoredSession(nextSession);
     setSession(nextSession);
     setStatus('authenticated');
@@ -115,6 +116,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
       if (refreshToken) {
         await logout(refreshToken);
       }
+
+      await signOutFromGoogleNative();
     } finally {
       await clearStoredSession();
       setSession(null);

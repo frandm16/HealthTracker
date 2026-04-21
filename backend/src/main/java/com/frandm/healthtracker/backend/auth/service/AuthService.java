@@ -51,7 +51,7 @@ public class AuthService {
 
     @Transactional
     public AuthResponse signInWithGoogle(String idToken) {
-        GoogleIdTokenValidator.GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken); // Verifies the Google token
+        GoogleIdTokenValidator.GoogleUserInfo googleUser = googleIdTokenValidator.validate(idToken);
 
         UserEntity user = authIdentityRepository.findByProviderAndProviderUserId(GOOGLE_PROVIDER, googleUser.subject())
                 .map(AuthIdentityEntity::getUser)

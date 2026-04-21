@@ -1,16 +1,12 @@
 import { Stack } from 'expo-router';
-import * as AuthSession from 'expo-auth-session';
 import * as React from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { getGoogleClientId, getMissingAuthConfig } from '@/lib/config';
+import { signInWithGoogleNative, toGoogleAuthError } from '@/features/auth/native/google-sign-in';
+import { getMissingAuthConfig } from '@/lib/config';
 import { AuthContext } from '@/providers/auth-provider';
-
-const discovery = {
-  authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-};
 
 export default function AuthScreen() {
   const insets = useSafeAreaInsets();
@@ -25,63 +21,9 @@ export default function AuthScreen() {
   const { session, signInWithGoogleIdToken, refreshCurrentUser, signOut, status } = auth;
   const missingConfig = getMissingAuthConfig();
   const authEnabled = missingConfig.length === 0;
-  const googleClientId = authEnabled ? getGoogleClientId() : 'missing-google-client-id';
-
-  const [request, response, promptAsync] = AuthSession.useAuthRequest(
-    {
-      clientId: googleClientId,
-      responseType: AuthSession.ResponseType.IdToken,
-      scopes: ['openid', 'profile', 'email'],
-      usePKCE: false,
-      redirectUri: AuthSession.makeRedirectUri({
-        scheme: 'personalapp',
-        path: 'oauthredirect',
-      }),
-      extraParams: {
-        nonce: 'healthtracker-nonce',
-        prompt: 'select_account',
-      },
-    },
-    discovery,
-  );
-
-  useEffect(() => {
-    if (!response) {
-      return;
-    }
-
-    if (response.type === 'error') {
-      setAuthBusy(false);
-      setMessage(`Google devolvio un error: ${response.error?.message ?? 'error desconocido'}.`);
-      return;
-    }
-
-    if (response.type !== 'success') {
-      setAuthBusy(false);
-      return;
-    }
-
-    const idToken = response.params.id_token;
-    if (!idToken) {
-      setAuthBusy(false);
-      setMessage('Google no devolvio un idToken. Revisa el client ID y el flujo de Expo.');
-      return;
-    }
-
-    void (async () => {
-      try {
-        const backendSession = await signInWithGoogleIdToken(idToken);
-        setMessage(`Sesion iniciada como ${backendSession.user.email ?? backendSession.user.name}.`);
-      } catch (error) {
-        setMessage(error instanceof Error ? error.message : 'No se pudo iniciar sesion contra el backend.');
-      } finally {
-        setAuthBusy(false);
-      }
-    })();
-  }, [response, signInWithGoogleIdToken]);
 
   async function handleGoogleSignIn() {
-    if (!authEnabled || !request) {
+    if (!authEnabled) {
       setMessage(`Faltan variables: ${missingConfig.join(', ')}.`);
       return;
     }
@@ -90,11 +32,18 @@ export default function AuthScreen() {
     setMessage('Abriendo Google Sign-In...');
 
     try {
-      await promptAsync();
+      const idToken = await signInWithGoogleNative();
+      const backendSession = await signInWithGoogleIdToken({
+        idToken,
+      });
+      setMessage(`Sesion iniciada como ${backendSession.user.email ?? backendSession.user.name}.`);
     } catch (error) {
       setAuthBusy(false);
-      setMessage(error instanceof Error ? error.message : 'No se pudo abrir el flujo de Google.');
+      setMessage(toGoogleAuthError(error).message);
+      return;
     }
+
+    setAuthBusy(false);
   }
 
   async function handleRefreshUser() {
@@ -179,9 +128,9 @@ export default function AuthScreen() {
               padding: 16,
               borderRadius: 18,
               borderCurve: 'continuous',
-              backgroundColor: !authEnabled || authBusy || !request ? '#fed7aa' : '#f97316',
+              backgroundColor: !authEnabled || authBusy ? '#fed7aa' : '#f97316',
             }}
-            disabled={!authEnabled || authBusy || !request}
+            disabled={!authEnabled || authBusy}
             onPress={handleGoogleSignIn}
           >
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>

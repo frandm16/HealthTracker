@@ -3,6 +3,7 @@
     "name": "PersonalApp",
     "slug": "PersonalApp",
     "version": "1.0.0",
+    "platforms": ["android", "ios"],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "personalapp",
@@ -12,6 +13,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.frandm.personalapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -22,6 +24,7 @@
       "predictiveBackGestureEnabled": false
     },
     "plugins": [
+      "expo-dev-client",
       "expo-router",
       [
         "expo-splash-screen",

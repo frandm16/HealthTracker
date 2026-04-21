@@ -20,9 +20,11 @@ public class GoogleIdTokenValidator {
 
     private static final String GOOGLE_ISSUER = "https://accounts.google.com";
 
+    private final AuthProperties authProperties;
     private final JwtDecoder jwtDecoder;
 
     public GoogleIdTokenValidator(AuthProperties authProperties) {
+        this.authProperties = authProperties;
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withIssuerLocation(GOOGLE_ISSUER).build();
 
         OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(GOOGLE_ISSUER);
