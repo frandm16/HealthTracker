@@ -1,31 +1,39 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Link } from 'expo-router';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 export default function HomeScreen() {
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>PersonalApp</Text>
-      <Text style={styles.subtitle}>Base limpia del frontend lista para construir.</Text>
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Text>test</Text>
+        <Link href="/auth" style={styles.button}>
+          Ir a auth
+        </Link>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f7f4ed',
+  },
   container: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 20,
     padding: 24,
-    backgroundColor: '#ffffff',
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
-  },
-  subtitle: {
+  button: {
+    backgroundColor: '#ff8800',
+    borderRadius: 14,
+    color: '#f7f4ed',
     fontSize: 16,
-    textAlign: 'center',
-    color: '#4b5563',
+    fontWeight: '700',
+    overflow: 'hidden',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
   },
 });

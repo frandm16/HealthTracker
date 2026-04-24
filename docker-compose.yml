@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16
+    container_name: healthtracker-db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: healthtracker-backend
+    env_file:
+      - .env
+    environment:
+      BACKEND_PRIVATE_PORT: ${BACKEND_PRIVATE_PORT}
+      APP_AUTH_JWT_SECRET: ${APP_AUTH_JWT_SECRET}
+      APP_AUTH_ACCESS_TOKEN_TTL_SECONDS: ${APP_AUTH_ACCESS_TOKEN_TTL_SECONDS}
+      APP_AUTH_REFRESH_TOKEN_TTL_SECONDS: ${APP_AUTH_REFRESH_TOKEN_TTL_SECONDS}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PUBLIC_PORT}:${BACKEND_PRIVATE_PORT}"
+
+volumes:
+  postgres_data:

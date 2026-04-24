@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: healthtracker-backend
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+server:
+  port: ${BACKEND_PRIVATE_PORT:8080}
+
+app:
+  auth: # AuthProperties
+    jwt:
+      secret: ${APP_AUTH_JWT_SECRET}
+      access-token-seconds: ${APP_AUTH_ACCESS_TOKEN_TTL_SECONDS}
+    refresh-token:
+      refresh-token-seconds: ${APP_AUTH_REFRESH_TOKEN_TTL_SECONDS}
+    google:
+      google-client-id: ${GOOGLE_CLIENT_ID}
