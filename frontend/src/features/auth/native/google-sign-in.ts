@@ -27,7 +27,7 @@ function ensureConfigured() {
 
 export async function signInWithGoogleNative(): Promise<string> {
   if (Platform.OS !== 'android') {
-    throw new Error('El login nativo de Google esta preparado solo para Android en esta fase.');
+    throw new Error('Not supported.');
   }
 
   ensureConfigured();
@@ -36,11 +36,11 @@ export async function signInWithGoogleNative(): Promise<string> {
   const response = await GoogleSignin.signIn();
 
   if (isCancelledResponse(response)) {
-    throw new Error('Inicio de sesion cancelado.');
+    throw new Error('Canceled.');
   }
 
   if (!isSuccessResponse(response) || !response.data.idToken) {
-    throw new Error('Google no devolvio un idToken valido.');
+    throw new Error('Sign-in failed.');
   }
 
   return response.data.idToken;
@@ -65,19 +65,19 @@ export async function signOutFromGoogleNative(): Promise<void> {
 
 export function toGoogleAuthError(error: unknown): Error {
   if (!isErrorWithCode(error)) {
-    return error instanceof Error ? error : new Error('No se pudo iniciar sesion con Google.');
+    return error instanceof Error ? error : new Error('Sign-in failed.');
   }
 
   switch (error.code) {
     case statusCodes.IN_PROGRESS:
-      return new Error('Ya hay un inicio de sesion en curso.');
+      return new Error('Please wait.');
     case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
-      return new Error('Google Play Services no esta disponible en este dispositivo.');
+      return new Error('Sign-in failed.');
     case statusCodes.SIGN_IN_CANCELLED:
-      return new Error('Inicio de sesion cancelado.');
+      return new Error('Canceled.');
     case statusCodes.SIGN_IN_REQUIRED:
-      return new Error('Debes volver a seleccionar una cuenta de Google.');
+      return new Error('Please sign in.');
     default:
-      return new Error(error.message || 'No se pudo iniciar sesion con Google.');
+      return new Error('Sign-in failed.');
   }
 }

@@ -31,18 +31,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   });
 
   if (!response.ok) {
-    let message = `Request failed with status ${response.status}.`;
-
-    try {
-      const errorBody = (await response.json()) as { message?: string };
-      if (errorBody.message) {
-        message = errorBody.message;
-      }
-    } catch {
-      // Ignore invalid JSON error bodies and use the default message.
-    }
-
-    throw new ApiError(message, response.status);
+    throw new ApiError('Request failed.', response.status);
   }
 
   if (response.status === 204) {

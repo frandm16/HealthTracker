@@ -81,7 +81,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public UserResponse getCurrentUser(UUID userId) {
         UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Authenticated user was not found."));
+                .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Not found."));
         return toUserResponse(user);
     }
 
@@ -104,10 +104,10 @@ public class AuthService {
 
     private AuthSessionEntity getActiveSession(String refreshToken, OffsetDateTime now) {
         AuthSessionEntity session = authSessionRepository.findByRefreshTokenHash(refreshTokenService.hash(refreshToken))
-                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Refresh token is invalid."));
+                .orElseThrow(() -> new ResponseStatusException(UNAUTHORIZED, "Unauthorized."));
 
         if (session.isRevoked() || session.isExpired(now)) { // expired Session
-            throw new ResponseStatusException(UNAUTHORIZED, "Refresh token is no longer active.");
+            throw new ResponseStatusException(UNAUTHORIZED, "Unauthorized.");
         }
 
         return session;

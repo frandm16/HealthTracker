@@ -45,7 +45,7 @@ public class JwtTokenService {
             Claims claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload();
             return UUID.fromString(claims.getSubject());
         } catch (RuntimeException ex) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Access token is invalid.");
+            throw new ResponseStatusException(UNAUTHORIZED, "Unauthorized.");
         }
     }
 

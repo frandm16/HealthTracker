@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { signInWithGoogleNative, toGoogleAuthError } from '@/features/auth/native/google-sign-in';
+import { signInWithGoogleNative } from '@/features/auth/native/google-sign-in';
 import { getMissingAuthConfig } from '@/lib/config';
 import { AuthContext } from '@/providers/auth-provider';
 
@@ -12,7 +12,7 @@ export default function AuthScreen() {
   const insets = useSafeAreaInsets();
   const auth = React.use(AuthContext);
   const [authBusy, setAuthBusy] = useState(false);
-  const [message, setMessage] = useState('Inicia sesion con Google y valida el backend.');
+  const [message, setMessage] = useState('Sign in with Google.');
 
   if (!auth) {
     throw new Error('Auth context is missing.');
@@ -24,22 +24,22 @@ export default function AuthScreen() {
 
   async function handleGoogleSignIn() {
     if (!authEnabled) {
-      setMessage(`Faltan variables: ${missingConfig.join(', ')}.`);
+      setMessage('Missing configuration.');
       return;
     }
 
     setAuthBusy(true);
-    setMessage('Abriendo Google Sign-In...');
+    setMessage('Opening Google Sign-In...');
 
     try {
       const idToken = await signInWithGoogleNative();
       const backendSession = await signInWithGoogleIdToken({
         idToken,
       });
-      setMessage(`Sesion iniciada como ${backendSession.user.email ?? backendSession.user.name}.`);
-    } catch (error) {
+      setMessage(`Signed in as ${backendSession.user.email ?? backendSession.user.name}.`);
+    } catch {
       setAuthBusy(false);
-      setMessage(toGoogleAuthError(error).message);
+      setMessage('Something went wrong.');
       return;
     }
 
@@ -50,9 +50,9 @@ export default function AuthScreen() {
     setAuthBusy(true);
     try {
       await refreshCurrentUser();
-      setMessage('Backend verificado. Sesion y perfil sincronizados.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo cargar /api/auth/me.');
+      setMessage('Profile synced.');
+    } catch {
+      setMessage('Something went wrong.');
     } finally {
       setAuthBusy(false);
     }
@@ -62,9 +62,9 @@ export default function AuthScreen() {
     setAuthBusy(true);
     try {
       await signOut();
-      setMessage('Sesion eliminada en la app.');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'No se pudo cerrar la sesion.');
+      setMessage('Signed out.');
+    } catch {
+      setMessage('Something went wrong.');
     } finally {
       setAuthBusy(false);
     }
@@ -93,7 +93,7 @@ export default function AuthScreen() {
           }}
         >
           <Text selectable style={{ fontSize: 28, fontWeight: '700', color: '#111827' }}>
-            Login simple
+            Sign in
           </Text>
           <Text selectable style={{ fontSize: 15, lineHeight: 22, color: '#4b5563' }}>
             {message}
@@ -111,13 +111,13 @@ export default function AuthScreen() {
           }}
         >
           <Text selectable style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>
-            Estado
+            Status
           </Text>
           <Text selectable style={{ color: '#374151' }}>
-            {session ? `${session.user.name} | ${session.user.email ?? 'sin email'}` : 'Sin sesion'}
+            {session ? `${session.user.name} | ${session.user.email ?? 'no email'}` : 'Signed out'}
           </Text>
           <Text selectable style={{ color: '#6b7280' }}>
-            {authEnabled ? 'Configuracion lista' : `Faltan: ${missingConfig.join(', ')}`}
+            {authEnabled ? 'Ready' : 'Missing configuration'}
           </Text>
         </View>
 
@@ -134,7 +134,7 @@ export default function AuthScreen() {
             onPress={handleGoogleSignIn}
           >
             <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>
-              {authBusy ? 'Procesando...' : 'Entrar con Google'}
+              {authBusy ? 'Working...' : 'Continue with Google'}
             </Text>
           </Pressable>
 
@@ -149,7 +149,7 @@ export default function AuthScreen() {
             disabled={!session || authBusy}
             onPress={handleRefreshUser}
           >
-            <Text style={{ color: '#111827', fontSize: 15, fontWeight: '600' }}>Actualizar perfil</Text>
+            <Text style={{ color: '#111827', fontSize: 15, fontWeight: '600' }}>Refresh profile</Text>
           </Pressable>
 
           <Pressable
@@ -163,7 +163,7 @@ export default function AuthScreen() {
             disabled={!session || authBusy}
             onPress={handleLogout}
           >
-            <Text style={{ color: '#b91c1c', fontSize: 15, fontWeight: '600' }}>Cerrar sesion</Text>
+            <Text style={{ color: '#b91c1c', fontSize: 15, fontWeight: '600' }}>Sign out</Text>
           </Pressable>
         </View>
       </ScrollView>

@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type PropsWithChildren } from 'react';
+import { createContext, useCallback, useEffect, useState, type PropsWithChildren } from 'react';
 
 import { fetchMe, logout, refreshSession, signInWithGoogle, type GoogleIdTokenSignInPayload } from '@/features/auth/api/auth-api';
 import { signOutFromGoogleNative } from '@/features/auth/native/google-sign-in';
@@ -11,6 +11,7 @@ type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 type AuthContextValue = {
   status: AuthStatus;
   session: StoredAuthSession | null;
+  getAccessToken: (forceRefresh?: boolean) => Promise<string>;
   signInWithGoogleIdToken: (payload: GoogleIdTokenSignInPayload) => Promise<StoredAuthSession>;
   refreshCurrentUser: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -64,25 +65,45 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
-  async function signInWithGoogleIdToken(payload: GoogleIdTokenSignInPayload): Promise<StoredAuthSession> {
+  const signInWithGoogleIdToken = useCallback(async (payload: GoogleIdTokenSignInPayload): Promise<StoredAuthSession> => {
     const nextSession = await signInWithGoogle(payload);
     await saveStoredSession(nextSession);
     setSession(nextSession);
     setStatus('authenticated');
     return nextSession;
-  }
+  }, []);
 
-  async function renewSession(currentSession: StoredAuthSession): Promise<StoredAuthSession> {
-    const nextSession = await refreshSession(currentSession.refreshToken);
-    await saveStoredSession(nextSession);
-    setSession(nextSession);
-    setStatus('authenticated');
-    return nextSession;
-  }
+  const expireSession = useCallback(async () => {
+    await clearStoredSession();
+    setSession(null);
+    setStatus('unauthenticated');
+  }, []);
 
-  async function refreshCurrentUser(): Promise<void> {
+  const renewSession = useCallback(async (currentSession: StoredAuthSession): Promise<StoredAuthSession> => {
+    try {
+      const nextSession = await refreshSession(currentSession.refreshToken);
+      await saveStoredSession(nextSession);
+      setSession(nextSession);
+      setStatus('authenticated');
+      return nextSession;
+    } catch (error) {
+      await expireSession();
+      throw error;
+    }
+  }, [expireSession]);
+
+  const getAccessToken = useCallback(async (forceRefresh = false): Promise<string> => {
     if (!session) {
-      throw new Error('No hay ninguna sesion iniciada.');
+      throw new Error('Please sign in.');
+    }
+
+    const nextSession = forceRefresh || isAccessTokenExpired(session) ? await renewSession(session) : session;
+    return nextSession.accessToken;
+  }, [renewSession, session]);
+
+  const refreshCurrentUser = useCallback(async (): Promise<void> => {
+    if (!session) {
+      throw new Error('Please sign in.');
     }
 
     try {
@@ -107,9 +128,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
       throw error;
     }
-  }
+  }, [renewSession, session]);
 
-  async function signOut(): Promise<void> {
+  const signOut = useCallback(async (): Promise<void> => {
     const refreshToken = session?.refreshToken;
 
     try {
@@ -123,13 +144,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
       setSession(null);
       setStatus('unauthenticated');
     }
-  }
+  }, [session?.refreshToken]);
 
   return (
     <AuthContext.Provider
       value={{
         status,
         session,
+        getAccessToken,
         signInWithGoogleIdToken,
         refreshCurrentUser,
         signOut,

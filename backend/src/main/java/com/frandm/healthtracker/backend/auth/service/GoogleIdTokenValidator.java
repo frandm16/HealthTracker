@@ -35,7 +35,7 @@ public class GoogleIdTokenValidator {
                 return OAuth2TokenValidatorResult.success();
             }
 
-            return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Google idToken audience is invalid.", null));
+            return OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Unauthorized.", null));
         };
 
         decoder.setJwtValidator(jwt -> {
@@ -57,12 +57,12 @@ public class GoogleIdTokenValidator {
             String name = jwt.getClaimAsString("name");
 
             if (subject == null || email == null || name == null || name.isBlank()) {
-                throw new ResponseStatusException(UNAUTHORIZED, "Google idToken payload is incomplete.");
+                throw new ResponseStatusException(UNAUTHORIZED, "Unauthorized.");
             }
 
             return new GoogleUserInfo(subject, email, name);
         } catch (JwtException ex) {
-            throw new ResponseStatusException(UNAUTHORIZED, "Google idToken verification failed.");
+            throw new ResponseStatusException(UNAUTHORIZED, "Unauthorized.");
         }
     }
 
