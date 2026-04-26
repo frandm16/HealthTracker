@@ -15,6 +15,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="auth" options={{ title: 'Auth' }} />
+          <Stack.Screen name="nutrition" options={{ title: 'Nutrition' }} />
         </Stack>
         <StatusBar style="auto" />
       </ThemeProvider>

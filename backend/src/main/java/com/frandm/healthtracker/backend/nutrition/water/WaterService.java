@@ -44,7 +44,7 @@ public class WaterService {
     @Transactional
     public void deleteWater(UUID userId, UUID logId) {
         WaterLogEntity log = waterLogRepository.findById(logId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Water log was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
         accessService.assertOwned(userId, log.getUser().getId());
         waterLogRepository.delete(log);
     }

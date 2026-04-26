@@ -14,16 +14,20 @@ import com.frandm.healthtracker.backend.nutrition.meal.MealResponseMapper;
 import com.frandm.healthtracker.backend.nutrition.meal.MealSlotRepository;
 import com.frandm.healthtracker.backend.nutrition.water.WaterLogEntity;
 import com.frandm.healthtracker.backend.nutrition.water.WaterLogRepository;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class NutritionDayService {
+
+    private static final int DEFAULT_TARGET_CALORIES_KCAL = 1800;
+    private static final BigDecimal DEFAULT_TARGET_PROTEIN_G = BigDecimal.valueOf(140);
+    private static final BigDecimal DEFAULT_TARGET_CARBS_G = BigDecimal.valueOf(198);
+    private static final BigDecimal DEFAULT_TARGET_FATS_G = BigDecimal.valueOf(50);
 
     private final NutritionAccessService accessService;
     private final NutritionDayRepository nutritionDayRepository;
@@ -48,9 +52,9 @@ public class NutritionDayService {
         this.waterLogRepository = waterLogRepository;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public NutritionDayResponse getDay(UUID userId, LocalDate day) {
-        NutritionDayEntity nutritionDay = getNutritionDay(userId, day);
+        NutritionDayEntity nutritionDay = getOrCreateNutritionDay(userId, day);
         return toResponse(nutritionDay);
     }
 
@@ -71,9 +75,9 @@ public class NutritionDayService {
         return toResponse(nutritionDayRepository.save(nutritionDay));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public NutritionSummaryResponse getSummary(UUID userId, LocalDate day) {
-        NutritionDayEntity nutritionDay = getNutritionDay(userId, day);
+        NutritionDayEntity nutritionDay = getOrCreateNutritionDay(userId, day);
         List<MealItemEntity> items = mealSlotRepository.findByNutritionDayOrderByMealTypeAsc(nutritionDay).stream()
                 .flatMap(slot -> mealItemRepository.findByMealSlotOrderByCreatedAtAsc(slot).stream())
                 .toList();
@@ -92,9 +96,24 @@ public class NutritionDayService {
         );
     }
 
-    private NutritionDayEntity getNutritionDay(UUID userId, LocalDate day) {
+    private NutritionDayEntity getOrCreateNutritionDay(UUID userId, LocalDate day) {
         return nutritionDayRepository.findByUserIdAndDay(userId, day)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nutrition day was not found."));
+                .orElseGet(() -> createDefaultNutritionDay(userId, day));
+    }
+
+    private NutritionDayEntity createDefaultNutritionDay(UUID userId, LocalDate day) {
+        UserEntity user = accessService.getUser(userId);
+        NutritionDayEntity nutritionDay = new NutritionDayEntity();
+        nutritionDay.setUser(user);
+        nutritionDay.setDay(day);
+        nutritionDay.setRestingCaloriesKcal(0);
+        nutritionDay.setActiveCaloriesKcal(0);
+        nutritionDay.setAdjustmentCaloriesKcal(0);
+        nutritionDay.setTargetCaloriesKcal(DEFAULT_TARGET_CALORIES_KCAL);
+        nutritionDay.setTargetProteinG(DEFAULT_TARGET_PROTEIN_G);
+        nutritionDay.setTargetCarbsG(DEFAULT_TARGET_CARBS_G);
+        nutritionDay.setTargetFatsG(DEFAULT_TARGET_FATS_G);
+        return nutritionDayRepository.save(nutritionDay);
     }
 
     private NutritionDayResponse toResponse(NutritionDayEntity nutritionDay) {

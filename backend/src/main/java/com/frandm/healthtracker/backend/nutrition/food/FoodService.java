@@ -46,7 +46,7 @@ public class FoodService {
     public List<FoodResponse> searchFoods(UUID userId, String query) {
         String normalizedQuery = query == null ? "" : query.trim();
         if (normalizedQuery.length() < 2) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Search query must have at least 2 characters.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request.");
         }
 
         FoodSearchHistoryEntity history = new FoodSearchHistoryEntity();
@@ -63,7 +63,7 @@ public class FoodService {
     public FoodResponse findFoodByBarcode(String barcode) {
         return foodRepository.findFirstByBarcode(barcode)
                 .map(this::toResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food barcode was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
     }
 
     public FoodResponse toResponse(FoodEntity food) {

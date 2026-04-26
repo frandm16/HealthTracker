@@ -28,7 +28,7 @@ public class NutritionProfileService {
     public NutritionProfileResponse getProfile(UUID userId) {
         return profileRepository.findByUserId(userId)
                 .map(this::toResponse)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nutrition profile was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
     }
 
     @Transactional
@@ -47,7 +47,7 @@ public class NutritionProfileService {
     private void validatePercentages(BigDecimal protein, BigDecimal carbs, BigDecimal fats) {
         BigDecimal total = protein.add(carbs).add(fats);
         if (total.compareTo(ONE_HUNDRED) != 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Macro percentages must add up to 100.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request.");
         }
     }
 

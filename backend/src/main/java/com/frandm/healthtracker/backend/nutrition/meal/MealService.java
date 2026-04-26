@@ -77,7 +77,7 @@ public class MealService {
     @Transactional
     public MealDishResponse createDish(UUID userId, LocalDate day, MealType mealType, MealDishRequest request) {
         if (request.mealItemIds().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dish requires at least one meal item.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request.");
         }
         MealSlotEntity slot = getOrCreateSlot(userId, day, mealType);
         List<MealItemEntity> items = request.mealItemIds().stream()
@@ -111,14 +111,14 @@ public class MealService {
 
     public MealItemEntity getOwnedItem(UUID userId, UUID itemId) {
         MealItemEntity item = mealItemRepository.findById(itemId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal item was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
         accessService.assertOwned(userId, item.getMealSlot().getNutritionDay().getUser().getId());
         return item;
     }
 
     private MealSlotEntity getOrCreateSlot(UUID userId, LocalDate day, MealType mealType) {
         NutritionDayEntity nutritionDay = nutritionDayRepository.findByUserIdAndDay(userId, day)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nutrition day was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
         return mealSlotRepository.findByNutritionDayAndMealType(nutritionDay, mealType)
                 .orElseGet(() -> {
                     MealSlotEntity slot = new MealSlotEntity();
@@ -130,14 +130,14 @@ public class MealService {
 
     private MealDishEntity getOwnedDish(UUID userId, UUID dishId) {
         MealDishEntity dish = mealDishRepository.findById(dishId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Meal dish was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
         accessService.assertOwned(userId, dish.getMealSlot().getNutritionDay().getUser().getId());
         return dish;
     }
 
     private void applyMealItemRequest(MealItemEntity item, MealItemRequest request) {
         FoodEntity food = request.foodId() == null ? null : foodRepository.findById(request.foodId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Food was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
 
         item.setFood(food);
         item.setFoodName(request.foodName());
@@ -151,7 +151,7 @@ public class MealService {
 
     private void assertSameSlot(MealItemEntity item, MealSlotEntity slot) {
         if (!item.getMealSlot().getId().equals(slot.getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Dish items must belong to the requested meal slot.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid request.");
         }
     }
 

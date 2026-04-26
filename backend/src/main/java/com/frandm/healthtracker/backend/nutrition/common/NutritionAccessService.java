@@ -18,12 +18,12 @@ public class NutritionAccessService {
 
     public UserEntity getUser(UUID userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Authenticated user was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
     }
 
     public void assertOwned(UUID expectedUserId, UUID actualUserId) {
         if (!expectedUserId.equals(actualUserId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Resource was not found.");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found.");
         }
     }
 }

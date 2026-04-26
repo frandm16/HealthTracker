@@ -44,7 +44,7 @@ public class WeightService {
     @Transactional
     public void deleteWeight(UUID userId, UUID logId) {
         WeightLogEntity log = weightLogRepository.findById(logId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Weight log was not found."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found."));
         accessService.assertOwned(userId, log.getUser().getId());
         weightLogRepository.delete(log);
     }
