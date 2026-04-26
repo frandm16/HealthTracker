@@ -24,9 +24,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class NutritionDayService {
 
-    private static final int DEFAULT_TARGET_CALORIES_KCAL = 1800;
+    private static final int DEFAULT_TARGET_CALORIES_KCAL = 2200;
     private static final BigDecimal DEFAULT_TARGET_PROTEIN_G = BigDecimal.valueOf(140);
-    private static final BigDecimal DEFAULT_TARGET_CARBS_G = BigDecimal.valueOf(198);
+    private static final BigDecimal DEFAULT_TARGET_CARBS_G = BigDecimal.valueOf(200);
     private static final BigDecimal DEFAULT_TARGET_FATS_G = BigDecimal.valueOf(50);
 
     private final NutritionAccessService accessService;
